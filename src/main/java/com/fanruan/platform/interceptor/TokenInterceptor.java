@@ -1,8 +1,12 @@
 package com.fanruan.platform.interceptor;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.fanruan.platform.bean.OpenAPIToken;
+import com.fanruan.platform.bean.RecordInterfaceCall;
 import com.fanruan.platform.dao.OpenAPITokenDao;
+import com.fanruan.platform.dao.RecordInterfaceCallDao;
 import com.fanruan.platform.util.PasswordEncoder;
 import com.fanruan.platform.util.TokenUtil;
 import com.google.common.collect.Lists;
@@ -18,6 +22,9 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 
 @Component
@@ -27,12 +34,17 @@ public class TokenInterceptor implements HandlerInterceptor {
     private OpenAPITokenDao openAPITokenDao;
     private static Set<String> blackSet = Sets.newHashSet();
 
+    @Autowired
+    private RecordInterfaceCallDao recordInterfaceCallDao;
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)throws Exception{
         if(request.getMethod().equals("OPTIONS")){
             response.setStatus(HttpServletResponse.SC_OK);
             return true;
         }
+        RecordInterfaceCall call = new RecordInterfaceCall();
+        call.setRequestTime(new Date());
         response.setCharacterEncoding("utf-8");
         String token = request.getHeader("token");
         String authToken = request.getHeader("X-AURORA-TOKEN");
@@ -47,10 +59,13 @@ public class TokenInterceptor implements HandlerInterceptor {
                 String uri = openAPIToken.getUri();
                 boolean passwordValid = PasswordEncoder.isPasswordValid(authToken, tokenKey);
                if(passwordValid&&StringUtils.contains(requestURI,uri)){
+                   call.setTokenId(openAPIToken.getTokenId());
+                   call.setUri(requestURI);
+                   call.setRequestMessage(getParams(request));
+                   recordInterfaceCallDao.saveAndFlush(call);
                    System.out.println("加密对外api，跳过登录认证");
                    return true;
                }
-
             }
         }
         if(token != null){
@@ -67,6 +82,9 @@ public class TokenInterceptor implements HandlerInterceptor {
             }
             if(result){
                 System.out.println("通过拦截器");
+                call.setUri(requestURI);
+                call.setRequestMessage(getParams(request));
+                recordInterfaceCallDao.saveAndFlush(call);
                 return true;
             }
         }else {
@@ -90,6 +108,25 @@ public class TokenInterceptor implements HandlerInterceptor {
             return false;
         }
         return false;
+    }
+
+    private String getParams(HttpServletRequest request){
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new InputStreamReader(request.getInputStream(), "UTF-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String line = null;
+        StringBuilder sb = new StringBuilder();
+        try {
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
     }
 
     @Override

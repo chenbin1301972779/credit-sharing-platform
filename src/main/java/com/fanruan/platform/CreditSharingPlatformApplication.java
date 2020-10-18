@@ -11,5 +11,4 @@ public class CreditSharingPlatformApplication {
     public static void main(String[] args) {
         SpringApplication.run(CreditSharingPlatformApplication.class, args);
     }
-
 }
