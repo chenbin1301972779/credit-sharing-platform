@@ -8,6 +8,7 @@ import java.sql.Timestamp;
 @Data
 @Entity
 @Table(name = "LOG_ZCX_CONCERN")
+@IdClass(ZcxConcernPrimaryKey.class)
 public class ZhongChengXinConcern {
 
     @Id
@@ -44,6 +45,8 @@ public class ZhongChengXinConcern {
     @Column(name="REQUESTID")
     private String requestId;
 
+    //TODO 设置联合主键
+    @Id
     @Column(name="UPDATEBY")
     private String updateBy;
 

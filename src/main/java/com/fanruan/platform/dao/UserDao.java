@@ -20,5 +20,4 @@ public interface UserDao extends JpaRepository<User,Integer> {
     Page<User> findAllByStatusInOrderByStatusDesc(Pageable pageable,List<Integer> status);
     Page<User> findAll(Pageable pageable);
     List<User> findAllByUsernameIn(List<String> usernameList);
-
 }

@@ -31,10 +31,7 @@ import javax.xml.namespace.QName;
 import java.io.*;
 import java.net.URL;
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 public class CompanyController {
@@ -446,11 +443,11 @@ public class CompanyController {
         Integer pageSize = CommonUtils.getIntegerValue(param.get("pageSize")) ;
         Integer total = pdfMapper.selectZhongXinBaoPDFListCount(xcode,companyName);
         List<ZhongXinBaoPDFList> zhongXinBaoPDFS = pdfMapper.selectZhongXinBaoPDFList(xcode,companyName,pageSize,page);
-        if(CollectionUtils.isEmpty(zhongXinBaoPDFS)){
-            hs.put("code","3");
-            hs.put("msg","服务器上未查询到pdf文件");
-            return objectMapper.writeValueAsString(hs);
-        }
+//        if(CollectionUtils.isEmpty(zhongXinBaoPDFS)){
+//            hs.put("code","3");
+//            hs.put("msg","服务器上未查询到pdf文件");  //服务器上未查询到pdf文件   修改报错提示
+//            return objectMapper.writeValueAsString(hs);
+//        }
         hs.put("code","0");
         hs.put("msg","");
         hs.put("pdfList",zhongXinBaoPDFS);

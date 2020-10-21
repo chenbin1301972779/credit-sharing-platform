@@ -616,7 +616,10 @@ public class CompanyService {
         if(zhongchengxinFlag!=null){
             ZhongChengXinConcern zhongChengXinConcern = new ZhongChengXinConcern();
             String entType = (String) param.get("entType");
-            Optional<ZhongChengXinConcern> byCode = concernDao.findByCode(company.getCreditCode());
+//            Optional<ZhongChengXinConcern> byCode = concernDao.findByCode(company.getCreditCode());
+            String creditCode = company.getCreditCode();
+            String updateby = user.getUsername();
+            Optional<ZhongChengXinConcern> byCode = concernDao.findByCodeAndUpdateBy(creditCode,updateby);
             if(byCode.isPresent()){
                 zhongChengXinConcern = byCode.get();
             }

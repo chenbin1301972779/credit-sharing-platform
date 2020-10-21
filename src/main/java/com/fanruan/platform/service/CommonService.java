@@ -182,11 +182,11 @@ public class CommonService {
         return true;
     }
 
-    public HashMap<String,Object> searchApplyList(HashMap<String, Object> hs, Integer pageIndex, Integer pageSize, String zxbCode, String name, Integer isSubAdmin, String operator) {
-        Integer totalRecords = commonsMapper.getZxbApplyListCount(pageIndex, pageSize, zxbCode, name, isSubAdmin, operator);
+    public HashMap<String,Object> searchApplyList(HashMap<String, Object> hs, Integer pageIndex, Integer pageSize, String zxbCode, String zxbCompanyName,String approveCode,String zxbInformant,String zxbApprover,Integer isSubAdmin, String operator) {
+        Integer totalRecords = commonsMapper.getZxbApplyListCount(pageIndex, pageSize, zxbCode, zxbCompanyName,approveCode,zxbInformant,zxbApprover,isSubAdmin, operator);
         hs.put("totalRecords",totalRecords);
         hs.put("totalPages",Math.ceil(totalRecords/pageSize));
-        List<ZhongXinBaoLog> applyList = commonsMapper.getZxbApplyList(hs, pageIndex, pageSize, zxbCode, name,  isSubAdmin, operator);
+        List<ZhongXinBaoLog> applyList = commonsMapper.getZxbApplyList(hs, pageIndex, pageSize, zxbCode, zxbCompanyName, approveCode,zxbInformant,zxbApprover, isSubAdmin, operator);
         hs.put("applyList",applyList);
         hs.put("code",0);
         return hs;

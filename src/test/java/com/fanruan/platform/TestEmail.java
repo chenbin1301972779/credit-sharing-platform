@@ -1,7 +1,7 @@
 package com.fanruan.platform;
  
-import com.fanruan.platform.bean.EmailEntity;
-import com.fanruan.platform.util.EmailSend;
+
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;

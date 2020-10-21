@@ -240,10 +240,23 @@ public class CommonController {
         String operator = (String)para.get("operator");
         Integer isSubAdmin = CommonUtils.getIntegerValue(para.get("isSubAdmin"));
         String zxbCode = (String)para.get("zxbCode");
-        String name = (String)para.get("name");
+        String zxbCompanyName = (String)para.get("zxbCompanyName");
+        String zxbApprove = (String)para.get("zxbApprove");
+        String approveCode = "";
+       if(null != zxbApprove){
+           if(zxbApprove.equals("通过")){
+               approveCode = "1";
+           }else if(zxbApprove.equals("不通过")){
+               approveCode = "999";
+           }else if(zxbApprove.equals("异常")){
+               approveCode = "0";
+           }
+       }
+        String zxbInformant = (String)para.get("zxbInformant");
+        String zxbApprover = (String)para.get("zxbApprover");
         HashMap<String,Object> hs=new HashMap<>();
         List<ZhongXinBaoLog> applyList = null;
-        hs =  commonService.searchApplyList(hs,pageIndex,pageSize,zxbCode,name,isSubAdmin,operator);
+        hs =  commonService.searchApplyList(hs,pageIndex,pageSize,zxbCode,zxbCompanyName,approveCode,zxbInformant,zxbApprover,isSubAdmin,operator);
         applyList = (List<ZhongXinBaoLog> )hs.get("applyList");
         hs.put("applyList",applyList);
         return objectMapper.writeValueAsString(hs);

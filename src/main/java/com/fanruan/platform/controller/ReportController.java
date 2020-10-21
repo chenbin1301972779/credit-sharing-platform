@@ -155,12 +155,12 @@ public class ReportController {
         }
         String reportType = "财务排雷";
         Company company = companyService.findCompanyByCode(creditCode);
-        List<Report> reportList = companyService.getReportList(company,reportType);
-        if(CollectionUtils.isEmpty(reportList)){
+//        List<Report> reportList = companyService.getReportList(company,reportType);
+//        if(CollectionUtils.isEmpty(reportList)){
             requestNewFinancialDeminingHtml(response, param, hs, company);
-        }else {
-            getDataBaseReportHtml(response, hs, temp, reportList);
-        }
+//        }else {
+//            getDataBaseReportHtml(response, hs, temp, reportList);
+//        }
         return objectMapper.writeValueAsString(hs);
     }
 

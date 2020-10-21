@@ -22,10 +22,10 @@ public interface CommonsMapper {
     public List<UserCompany> getUserCompany(String username);
     /**信保报告审核列表*/
     List<ZhongXinBaoLog> getZxbApplyList(HashMap<String, Object> hs, Integer pageIndex, Integer pageSize,
-                                        String zxbCode, String name, Integer isSubAdmin, String operator);
+                                        String zxbCode, String zxbCompanyName,String approveCode,String zxbInformant,String zxbApprover,Integer isSubAdmin, String operator);
     /**信保报告审核列表-条数*/
     Integer getZxbApplyListCount(Integer pageIndex,Integer pageSize,
-                                String zxbCode,String name,Integer isSubAdmin,String operator);
+                                String zxbCode,String zxbCompanyName,String approveCode,String zxbInformant,String zxbApprover,Integer isSubAdmin,String operator);
     /**审核不通过向OA推送消息*/
     Integer insertOAMsg(String updateBy, String approveBy);
 }
