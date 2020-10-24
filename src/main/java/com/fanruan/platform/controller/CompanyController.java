@@ -1,10 +1,13 @@
 package com.fanruan.platform.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fanruan.platform.bean.*;
 import com.fanruan.platform.constant.CommonUtils;
+import com.fanruan.platform.dao.UserDao;
 import com.fanruan.platform.dao.ZhongXinBaoLogDao;
 import com.fanruan.platform.htmlToPdf.HtmlToPdfUtils;
 import com.fanruan.platform.mapper.PdfMapper;
+import com.fanruan.platform.util.StringUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -47,7 +50,6 @@ public class CompanyController {
 
     @Autowired
     private PdfMapper pdfMapper;
-
 
     @RequestMapping(value = "/company/getRiskInfo", method = RequestMethod.POST)
     @ResponseBody
@@ -259,6 +261,35 @@ public class CompanyController {
         }
 
         ObjectMapper objectMapper=new ObjectMapper();
+        return objectMapper.writeValueAsString(hs);
+    }
+    @RequestMapping(value = "/company/getAllCompanyLevel", method = RequestMethod.POST)
+    @ResponseBody
+    public String getAllCompanyLevel(@RequestBody Map<String,Object> param) throws JsonProcessingException {
+        HashMap<String,Object> hs=new HashMap<>();
+        ObjectMapper objectMapper=new ObjectMapper();
+        Integer userId = CommonUtils.getIntegerValue(param.get("userId")) ;
+        if(null == userId){
+            hs.put("code",1);
+            hs.put("msg","无法获取登陆人信息");
+            return objectMapper.writeValueAsString(hs);
+        }
+        User user = userService.getUserById(userId);
+        if(null == user){
+            hs.put("code",1);
+            hs.put("msg","无法获取登陆人信息");
+            return objectMapper.writeValueAsString(hs);
+        }
+        List<CompanyLevel> treeData = new ArrayList<>();
+        companyService.getTreeData(user.getCompanyCode(),treeData);
+        if(null == treeData){
+            hs.put("code",2);
+            hs.put("msg","未查询到公司架构树信息");
+            return objectMapper.writeValueAsString(hs);
+        }
+        hs.put("code",0);
+        hs.put("msg","");
+        hs.put("treeData",treeData);
         return objectMapper.writeValueAsString(hs);
     }
 

@@ -323,11 +323,11 @@ public class UserService {
     public HashMap<String, Object> getUserList(
             HashMap<String, Object> hs,
             Integer pageIndex, Integer pageSize,
-            String username, String name, Integer status, Integer isSubAadmin){
-        Integer totalRecords = userMapper.getUserListCount(pageIndex, pageSize, username, name, status, isSubAadmin);
+            String username, String name, Integer status, Integer isSubAadmin,String companyCode){
+        Integer totalRecords = userMapper.getUserListCount(pageIndex, pageSize, username, name, status, isSubAadmin,companyCode);
         hs.put("totalRecords",totalRecords);
         hs.put("totalPages",Math.ceil(totalRecords/pageSize));
-        hs.put("userList",userMapper.getUserList(pageIndex, pageSize, username, name, status, isSubAadmin));
+        hs.put("userList",userMapper.getUserList(pageIndex, pageSize, username, name, status, isSubAadmin,companyCode));
         hs.put("code",0);
         return hs;
     }
@@ -506,11 +506,11 @@ public class UserService {
         return result;
     }
 
-    public HashMap<String,Object> searchSubAdminUserListNew(HashMap<String, Object> hs, Integer pageIndex, Integer pageSize, String username, String name, Integer status, Integer isSubAdmin, String operator) {
-        Integer totalRecords = usersMapper.getSubUserListCount(pageIndex, pageSize, username, name, status, isSubAdmin, operator);
+    public HashMap<String,Object> searchSubAdminUserListNew(HashMap<String, Object> hs, Integer pageIndex, Integer pageSize, String username, String name, Integer status, Integer isSubAdmin, String operator,String companyCode) {
+        Integer totalRecords = usersMapper.getSubUserListCount(pageIndex, pageSize, username, name, status, isSubAdmin, operator,companyCode);
         hs.put("totalRecords",totalRecords);
         hs.put("totalPages",Math.ceil(totalRecords/pageSize));
-        List<User> userList = usersMapper.getSubUserList(hs, pageIndex, pageSize, username, name, status,  isSubAdmin, operator);
+        List<User> userList = usersMapper.getSubUserList(hs, pageIndex, pageSize, username, name, status,  isSubAdmin, operator,companyCode);
         hs.put("userList",userList);
         hs.put("code",0);
         return hs;
@@ -519,5 +519,15 @@ public class UserService {
     public User getUserByUsername(String username) {
         Optional<User> byUsername = userDao.findByUsername(username);
         return CommonUtils.getUserValue(byUsername);
+    }
+
+    public HashMap<String, Object> getUserListLevel(HashMap<String, Object> hs, Integer pageIndex, Integer pageSize, String username, String name, Integer status, Integer isSubAdmin, String companyCode) {
+        Integer totalRecords = usersMapper.getUserListLevelCount(hs,pageIndex, pageSize, username, name, status, isSubAdmin,companyCode);
+        hs.put("totalRecords",totalRecords);
+        hs.put("totalPages",Math.ceil(totalRecords/pageSize));
+        List<User> userList = usersMapper.getUserListLevel(hs, pageIndex, pageSize, username, name, status,  isSubAdmin,companyCode);
+        hs.put("userList",userList);
+        hs.put("code",0);
+        return hs;
     }
 }

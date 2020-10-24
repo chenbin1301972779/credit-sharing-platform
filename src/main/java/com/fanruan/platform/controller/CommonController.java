@@ -250,6 +250,8 @@ public class CommonController {
                approveCode = "999";
            }else if(zxbApprove.equals("异常")){
                approveCode = "0";
+           }else if(zxbApprove.equals("待审核")){
+               approveCode = "2";
            }
        }
         String zxbInformant = (String)para.get("zxbInformant");

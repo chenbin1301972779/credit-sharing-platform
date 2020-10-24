@@ -57,12 +57,16 @@ public interface UserMapper {
             "<if test=\"status != null\">\n" +
             " and (t.status = #{status, jdbcType=INTEGER} ) \n" +
             "</if> \n" +
+            "<if test=\"companyCode != null  and companyCode!='' \">\n" +
+            " and (t.company_code = #{companyCode, jdbcType=VARCHAR} ) \n" +
+            "</if> \n" +
             "ORDER BY isSubAdmin DESC,status desc \n" +
             ") N " +
             "WHERE 1=1 \n" +
             "<if test=\"isSubAdmin != null\">\n" +
             " and (N.isSubAdmin = #{isSubAdmin, jdbcType=INTEGER} ) \n" +
             "</if> \n" +
+
             ") M\n" +
             "WHERE 1=1 \n" +
             "AND rowno &lt;= #{pageIndex, jdbcType=INTEGER} * #{pageSize, jdbcType=INTEGER}  \n" +
@@ -87,7 +91,8 @@ public interface UserMapper {
                                   @Param("username") String username,
                                   @Param("name") String name,
                                   @Param("status") Integer status,
-                                  @Param("isSubAdmin") Integer isSubAdmin);
+                                  @Param("isSubAdmin") Integer isSubAdmin,
+                                  @Param("companyCode") String companyCode);
 
 
     @Select(
@@ -130,6 +135,9 @@ public interface UserMapper {
                     "<if test=\"isSubAdmin != null\">\n" +
                     " and (M.isSubAdmin = #{isSubAdmin, jdbcType=INTEGER} ) \n" +
                     "</if> \n" +
+                    "<if test=\"companyCode != null  and companyCode!='' \">\n" +
+                    " and (M.companyCode = #{companyCode, jdbcType=VARCHAR} ) \n" +
+                    "</if> \n" +
                     "</script> "
     )
     @Results(id="getUserListCount", value= {
@@ -140,7 +148,8 @@ public interface UserMapper {
                                     @Param("username") String username,
                                     @Param("name") String name,
                                     @Param("status") Integer status,
-                                    @Param("isSubAdmin") Integer isSubAdmin);
+                                    @Param("isSubAdmin") Integer isSubAdmin,
+                                    @Param("companyCode") String companyCode);
 
     @Select(
             "<script> \n" +

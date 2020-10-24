@@ -218,6 +218,7 @@ com/sinosure/exchange/edi/po/NoLcQuotaApplyAppendix2.class
 com/sinosure/exchange/edi/po/ForeignBasicInfo.class
 com/sinosure/exchange/edi/po/ArrayOfEdiPolicyApproveInfo.class
 com/sinosure/exchange/edi/po/ArrayOfClaimApproveInfo.class
+com/fanruan/platform/bean/CompanyLevel.class
 com/sinosure/exchange/edi/po/ShipmentAlterApplyInfo.class
 com/sinosure/exchange/edi/service/DoEdiCreditReportInputResponse.class
 com/fanruan/platform/bean/TycConcernPrimaryKey.class

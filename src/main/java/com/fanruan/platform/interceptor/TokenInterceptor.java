@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
@@ -44,7 +45,8 @@ public class TokenInterceptor implements HandlerInterceptor {
             return true;
         }
         RecordInterfaceCall call = new RecordInterfaceCall();
-        call.setRequestTime(new Date());
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        call.setRequestTime(sdf.format(new Date()));
         response.setCharacterEncoding("utf-8");
         String token = request.getHeader("token");
         String authToken = request.getHeader("X-AURORA-TOKEN");

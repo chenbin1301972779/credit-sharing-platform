@@ -170,14 +170,23 @@ public class UserController{
         Integer isSubAdmin = CommonUtils.getIntegerValue(para.get("isSubAdmin"));
         String username = (String)para.get("username");
         String name = (String)para.get("name");
+        String companyCode = (String)para.get("companyCode");
+        Boolean isLevel = (Boolean)para.get("isLevel");
         Integer status = CommonUtils.getIntegerValue(para.get("status"));
         HashMap<String,Object> hs=new HashMap<>();
         List<User> userList = null;
-        if(StringUtils.equals(operator,"admin")){
-            hs = userService.getUserList(hs,pageIndex,pageSize,username,name,status,isSubAdmin);
+//        if(StringUtils.equals(operator,"admin")){
+//            hs = userService.getUserList(hs,pageIndex,pageSize,username,name,status,isSubAdmin,companyCode);
+//            userList = (List<User> )hs.get("userList");
+//        }else {
+//            hs =  userService.searchSubAdminUserListNew(hs,pageIndex,pageSize,username,name,status,isSubAdmin,operator,companyCode);
+//            userList = (List<User> )hs.get("userList");
+//        }
+        if(isLevel){
+            hs = userService.getUserListLevel(hs,pageIndex,pageSize,username,name,status,isSubAdmin,companyCode);
             userList = (List<User> )hs.get("userList");
-        }else {
-            hs =  userService.searchSubAdminUserListNew(hs,pageIndex,pageSize,username,name,status,isSubAdmin,operator);
+        }else{
+            hs = userService.getUserList(hs,pageIndex,pageSize,username,name,status,isSubAdmin,companyCode);
             userList = (List<User> )hs.get("userList");
         }
         userList = userService.fillUpdatePermissionNew(hs,userList,operator);

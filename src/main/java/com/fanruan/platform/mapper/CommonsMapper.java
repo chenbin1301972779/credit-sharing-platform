@@ -1,8 +1,7 @@
 package com.fanruan.platform.mapper;
 
-import com.fanruan.platform.bean.BlackList;
-import com.fanruan.platform.bean.UserCompany;
-import com.fanruan.platform.bean.ZhongXinBaoLog;
+import com.fanruan.platform.bean.*;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 import java.util.HashMap;
 import java.util.List;
@@ -28,4 +27,9 @@ public interface CommonsMapper {
                                 String zxbCode,String zxbCompanyName,String approveCode,String zxbInformant,String zxbApprover,Integer isSubAdmin,String operator);
     /**审核不通过向OA推送消息*/
     Integer insertOAMsg(String updateBy, String approveBy);
+    /**获取组织结构树的数据*/
+    List<CompanyLevel> getAllCompanyLevel(@Param(value="companyCode") String companyCode);
+    /**获取公司信息*/
+    CompanyLevel getCompanyLevel(@Param(value="companyCode") String companyCode);
+
 }

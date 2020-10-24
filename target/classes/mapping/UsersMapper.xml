@@ -90,6 +90,9 @@
         <if test="isSubAdmin != null">
             and (N.isSubAdmin = #{isSubAdmin} )
         </if>
+        <if test="companyCode != null and companyCode != ''">
+            and (N.companyCode = #{companyCode} )
+        </if>
         ) M
         WHERE 1=1
         <if test="isSubAdmin != null">
@@ -168,6 +171,9 @@
         </if>
         <if test="status != null">
             and (t.status = #{status} )
+        </if>
+        <if test="companyCode != null and companyCode != ''">
+            and (t.companyCode = #{companyCode} )
         </if>
         ) M
         WHERE 1=1
@@ -352,6 +358,169 @@
                                                                           FROM
                                                                               dual
     </insert>
+
+
+    <resultMap id="getUserListLevelCountResultMap" type="java.lang.Integer">
+        <result column="co" jdbcType="VARCHAR" property="co" />
+    </resultMap>
+
+    <select id="getUserListLevelCount" resultType="java.lang.Integer">
+with ds1 as(
+SELECT CODE,NAME as name,SCODE,SNAME FROM BIUSER.ODS_HR_ORG
+UNION
+SELECT CODE,NAME as name,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG
+)
+SELECT COUNT(*) AS CO FROM (
+SELECT
+USER_ID,USERNAME,NAME as name FROM CREDIT_USER
+WHERE COMPANY_CODE IN (
+SELECT CODE --自身
+FROM ds1 A
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode != ''">
+            and (A.SCODE = #{companyCode} )
+        </if>
+UNION ALL
+SELECT CODE --下级公司
+FROM ds1 A
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode != ''">
+            and (A.SCODE = #{companyCode} )
+        </if>
+UNION ALL
+SELECT B.CODE --下下级公司
+FROM ds1 A
+INNER JOIN ds1 B ON A.CODE=B.SCODE
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode != ''">
+            and (A.SCODE = #{companyCode} )
+        </if>
+UNION ALL
+SELECT C.CODE --下下下级公司
+FROM ds1 A
+INNER JOIN ds1 B ON A.CODE=B.SCODE
+INNER JOIN ds1 C ON B.CODE=C.SCODE
+WHERE 1 = 1
+        <if test="companyCode != null and companyCode != ''">
+            and (A.SCODE = #{companyCode} )
+        </if>
+UNION ALL
+SELECT D.CODE --下下下下级公司
+FROM ds1 A
+INNER JOIN ds1 B ON A.CODE=B.SCODE
+INNER JOIN ds1 C ON B.CODE=C.SCODE
+INNER JOIN ds1 D ON C.CODE=D.SCODE
+WHERE 1 = 1
+    <if test="name != null and name!=''">
+        and (name like '%'||#{name}||'%' )
+    </if>
+    <if test="username != null and username!=''">
+        and (USERNAME like '%'||#{username}||'%' )
+    </if>
+    <if test="status != null">
+        and (STATUS = #{status} )
+    </if>
+    <if test="companyCode != null and companyCode != ''">
+        and (A.SCODE = #{companyCode} )
+    </if>
+)
+)
+    </select>
+
+    <resultMap id="getUserListLevelResultMap" type="com.fanruan.platform.bean.User">
+        <result column="username" jdbcType="VARCHAR" property="username" />
+        <result column="password" jdbcType="VARCHAR" property="password" />
+        <result column="mobile" jdbcType="VARCHAR" property="mobile" />
+        <result column="email" jdbcType="VARCHAR" property="email" />
+        <result column="companyName" jdbcType="VARCHAR" property="companyName" />
+        <result column="deptName" jdbcType="VARCHAR" property="deptName" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="companyCode" jdbcType="VARCHAR" property="companyCode" />
+        <result column="deptCode" jdbcType="VARCHAR" property="deptCode" />
+        <result column="status" jdbcType="VARCHAR" property="status" />
+        <result column="newcompanyFlag" jdbcType="VARCHAR" property="newcompanyFlag" />
+        <result column="permissionRoles" jdbcType="VARCHAR" property="permissionRoles" />
+    </resultMap>
+
+    <select id="getUserListLevel" resultType="com.fanruan.platform.bean.User">
+        with ds1 as(
+        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.ODS_HR_ORG
+        UNION
+        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG
+        )
+        SELECT
+        USER_ID,USERNAME,PASSWORD,MOBILE,EMAIL,COMPANY_NAME,DEPT_NAME,COMPANY_CODE,DEPT_CODE,STATUS,NEWCOMPANY_FLAG,
+        F_GET_PERMISSION_BY_USERID(user_id) as permissionRoles,
+        CASE WHEN INSTR(F_GET_PERMISSION_BY_USERID(user_id),('sub_admin')) > 0 THEN 1 ELSE 0 END as isSubAdmin, NAME
+        FROM CREDIT_USER
+        WHERE COMPANY_CODE IN (
+        SELECT CODE --自身
+        FROM ds1 A
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode != ''">
+            and (A.SCODE = #{companyCode} )
+        </if>UNION ALL
+        SELECT
+        CODE --下级公司
+        FROM ds1
+        A
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode != ''">
+            and (A.SCODE = #{companyCode} )
+        </if>
+        UNION ALL
+        SELECT B.
+        CODE --下下级公司
+        FROM ds1 A
+        INNER
+        JOIN ds1 B ON A.CODE=B.SCODE
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode != ''">
+            and (A.SCODE = #{companyCode} )
+        </if>
+        UNION
+        ALL
+        SELECT C
+        .CODE --下下下级公司
+        FROM
+        ds1 A
+        INNER
+        JOIN ds1 B ON A.CODE=B.SCODE
+        INNER
+        JOIN ds1 C ON B.CODE=C.SCODE
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode != ''">
+            and (A.SCODE = #{companyCode} )
+        </if>
+        UNION
+        ALL
+        SELECT
+        D.CODE --下下下下级公司
+        FROM
+        ds1 A
+        INNER
+        JOIN ds1 B ON A.CODE=B.SCODE
+        INNER
+        JOIN ds1 C ON B.CODE=C.SCODE
+        INNER
+        JOIN ds1 D ON C.CODE=D.SCODE
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode != ''">
+            and (A.SCODE = #{companyCode} )
+        </if>
+        <if test="name != null and name!=''">
+            and (NAME like '%'||#{name}||'%' )
+        </if>
+        <if test="username != null and username!=''">
+            and (USERNAME like '%'||#{username}||'%' )
+        </if>
+        <if test="status != null">
+            and (STATUS = #{status} )
+        </if>
+        )
+        order by USERNAME
+    </select>
+
 
 </mapper>
 

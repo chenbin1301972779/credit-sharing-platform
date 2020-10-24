@@ -185,8 +185,8 @@
                 <if test="zxbCompanyName != null and zxbCompanyName!='' ">
                     and (N.reportCorpChnName like '%'||#{zxbCompanyName}||'%' OR N.reportCorpEngName like '%'||#{zxbCompanyName}||'%' )
                 </if>
-                <if test="approveCode != null">
-                    and (N.approveCode = #{approveCode} )
+                <if test="approveCode != null and approveCode != ''">
+                    and (N.approveCode = #{approveCode})
                 </if>
                 <if test="zxbInformant != null and zxbInformant!=''">
                     and (N.updateBy like '%'||#{zxbInformant}||'%' )
@@ -254,7 +254,7 @@
                 <if test="zxbCompanyName != null and zxbCompanyName!='' ">
                     and (N.reportCorpChnName like '%'||#{zxbCompanyName}||'%' OR N.reportCorpEngName like '%'||#{zxbCompanyName}||'%' )
                 </if>
-                <if test="approveCode != null">
+                <if test="approveCode != null and approveCode != ''">
                     and (N.approveCode = #{approveCode})
                 </if>
                 <if test="zxbInformant != null and zxbInformant!=''">
@@ -275,5 +275,44 @@
                                                                                             ,'您的信保报告申请已被'||#{approveBy}||'驳回，请重新申请。'--审核人
                                                                                             ,'信保报告审核')
     </insert>
+
+    <resultMap id="getAllCompanyLevelResultMap" type="com.fanruan.platform.bean.CompanyLevel">
+        <result column="code" jdbcType="VARCHAR" property="code" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="scode" jdbcType="VARCHAR" property="scode" />
+    </resultMap>
+    <select id="getAllCompanyLevel" resultType="com.fanruan.platform.bean.CompanyLevel">
+        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.ODS_HR_ORG
+        where 1 = 1
+        <if test="companyCode != null and companyCode !=''">
+            and (SCODE = #{companyCode})
+        </if>
+        UNION
+        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode !=''">
+           and (SCODE = #{companyCode})
+        </if>
+    </select>
+
+    <resultMap id="getCompanyLevelResultMap" type="com.fanruan.platform.bean.CompanyLevel">
+        <result column="code" jdbcType="VARCHAR" property="code" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="scode" jdbcType="VARCHAR" property="scode" />
+    </resultMap>
+    <select id="getCompanyLevel" resultType="com.fanruan.platform.bean.CompanyLevel">
+        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.ODS_HR_ORG
+        where 1 = 1
+        <if test="companyCode != null and companyCode !=''">
+            and (CODE = #{companyCode})
+        </if>
+        UNION
+        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode !=''">
+            and (CODE = #{companyCode})
+        </if>
+    </select>
+
 </mapper>
 

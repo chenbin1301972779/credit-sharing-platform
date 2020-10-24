@@ -519,6 +519,7 @@ public class CompanyService {
         log.setCorpSerialNoOut(getValue(entrustInput.getCorpSerialNo()));
         log.setUpdateBy(user.getUsername());
         log.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+        log.setApproveCode("2");
         zhongXinBaoLogDao.saveAndFlush(log);
     }
 
@@ -545,6 +546,25 @@ public class CompanyService {
 
     public void insertOAMsg(String updateBy, String approveBy){
         commonsMapper.insertOAMsg(updateBy, approveBy);
+    }
+
+
+    public List<CompanyLevel> getAllCompanyLevel(String companyCode){
+       return  commonsMapper.getAllCompanyLevel(companyCode);
+    }
+    public CompanyLevel getCompanyLevel(String companyCode){
+        return  commonsMapper.getCompanyLevel(companyCode);
+    }
+    public void  getTreeData(String companyCode, List<CompanyLevel> allCompanyLevel){
+        CompanyLevel companyLevelLord = this.getCompanyLevel(companyCode);
+        List<CompanyLevel> allChildCompanyLevel = this.getAllCompanyLevel(companyCode);
+        if(null == companyLevelLord || null == allChildCompanyLevel){
+            return;
+        }
+        allCompanyLevel.add(companyLevelLord);
+        for(CompanyLevel companyLevel:allChildCompanyLevel){
+            getTreeData(companyLevel.getCode(),allCompanyLevel);
+        }
     }
 
     public void saveZhongXinBaoLog(ZhongXinBaoLog log){

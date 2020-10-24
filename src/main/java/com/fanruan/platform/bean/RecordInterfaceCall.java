@@ -31,5 +31,5 @@ public class RecordInterfaceCall {
     private String uri;
 
     @Column(name = "REQUEST_TIME")
-    private Date requestTime;
+    private String requestTime;
 }
