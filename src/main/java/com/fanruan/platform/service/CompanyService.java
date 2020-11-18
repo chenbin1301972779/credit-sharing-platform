@@ -9,6 +9,7 @@ import com.fanruan.platform.dao.*;
 import com.fanruan.platform.mapper.CommonMapper;
 import com.fanruan.platform.mapper.CommonsMapper;
 import com.fanruan.platform.mapper.CompanyReportMapper;
+import com.fanruan.platform.mapper.PdfMapper;
 import com.fanruan.platform.util.CommonUtil;
 import com.fanruan.platform.util.DateUtil;
 import com.fanruan.platform.util.MD5Util;
@@ -29,6 +30,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -91,14 +94,18 @@ public class CompanyService {
 
     @Autowired
     private UserDao userDao;
-
+    @Autowired
+    PdfMapper pdfMapper;
     @Autowired
     private ZhongChengXinConcernDao concernDao;
 
     @Autowired
     private ReportDao reportDao;
 
-
+    @Autowired
+    private CompanyIDVerificationDao companyIDVerificationDao;
+    @Autowired
+    private AreaDao areaDao;
 
     public List<RiskInfo> findLatestRisk(String riskSource) {
         Date date = DateUtils.addDays(new Date(), -7);
@@ -721,6 +728,10 @@ public class CompanyService {
         Integer userId = CommonUtils.getIntegerValue(param.get("userId"));
         String entName = (String) param.get("entName");
         report.setUpdateBy(String.valueOf(userId));
+        String areaCode = (String) param.get("areaCode");
+        String industry = (String) param.get("industry");
+        String nature = (String) param.get("nature");
+        Area area = new Area();
         if(company==null){
             report.setCompanyName(entName);
             report.setCreditCode(code);
@@ -728,6 +739,13 @@ public class CompanyService {
             report.setCompanyName(company.getCompanyName());
             report.setCreditCode(company.getCreditCode());
         }
+        Optional<Area> byId = areaDao.findByAreaCode(areaCode);
+        if(byId.isPresent()) {
+            area = byId.get();
+        }
+        report.setArea(null == area.getAreaName() ? "/" : area.getAreaName());
+        report.setIndustry(null == industry ? "/" : industry);
+        report.setCompanyType(null == nature ? "/" : nature);
         report.setUpdateTime(new Timestamp(System.currentTimeMillis()));
         String fileName = report.getCreditCode() + "_" + report.getUpdateTime().getTime()+".html";
         String pdfName = report.getCreditCode() + "_" + report.getUpdateTime().getTime()+".pdf";
@@ -754,7 +772,7 @@ public class CompanyService {
         return null;
     }
 
-    public TianYanChaInfo getTianYanChaInfo(Integer companyId) {
+    public TianYanChaInfo getTianYanChaInfo(Integer companyId,Integer userId) {
         Optional<Company> companyOptional = companyDao.findById(companyId);
         Company company = CommonUtils.getCompanyValue(companyOptional);
         if(company==null||StringUtils.isBlank(company.getCreditCode())){
@@ -764,7 +782,13 @@ public class CompanyService {
         Optional<TianYanChaInfo> tianYanChaInfoOptional = tianYanChaInfoDao.findByCreditCode(company.getCreditCode());
         if(tianYanChaInfoOptional.isPresent()){
             tianYanChaInfo = tianYanChaInfoOptional.get();
-            return tianYanChaInfo;
+            String updateTime = tianYanChaInfo.getUpdateTime();
+            Date day = Calendar.getInstance().getTime();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String format = sdf.format(day);
+            if(StringUtils.isNotBlank(updateTime) && format.equals(updateTime.substring(0,10))){
+                return tianYanChaInfo;
+            }
         }
   ;
         Map<String, String> paramMap = Maps.newHashMap();
@@ -792,6 +816,7 @@ public class CompanyService {
         companyExtendInfo.setExtendInfo(dataStr);
         companyExtendInfo.setCompanyName(name);
         companyExtendInfo.setSourceType("tianyanchaSearch");
+        companyExtendInfo.setUpdateby(userId);
         companyExtendInfo.setUpdateTime(new Timestamp(System.currentTimeMillis()));
         companyExtendInfoDao.saveAndFlush(companyExtendInfo);
 
@@ -915,6 +940,7 @@ public class CompanyService {
         Boolean isImportant = (Boolean) param.get("isImportant");
         String ver = (String) param.get("ver");
         String type = (String) param.get("type");
+        String areaCode = (String)param.get("areaCode");
         if(company!=null){
             code = company.getCreditCode();
             reportParam.put("code", company.getCreditCode());
@@ -958,6 +984,7 @@ public class CompanyService {
         map.put("T1",map2);
         reportParam.put("reportData", map);
         reportParam.put("regionData", areaMap);
+        reportParam.put("regionCode", areaCode);
         return reportUrl;
     }
 
@@ -982,6 +1009,7 @@ public class CompanyService {
         String ver = (String) param.get("ver");
         String type = (String) param.get("type");
         String year = (String) param.get("year");
+        String areaCode = (String)param.get("areaCode");
         if(company!=null){
             reportParam.put("code", company.getCreditCode());
         }else {
@@ -1013,6 +1041,7 @@ public class CompanyService {
             Map<String, Object> objMap2 =values.getJSONObject(CommonUtils.getLastSecondYear());
             reportParam.put("T1",objMap2);
         }
+        reportParam.put("regionCode", areaCode);
         return reportUrl;
     }
 
@@ -1022,7 +1051,7 @@ public class CompanyService {
         if(company==null||StringUtils.isBlank(company.getCompanyName())){
             return null;
         }
-        return commonMapper.getZhongXinBaoShare(company.getCompanyName());
+        return commonMapper.getZhongXinBaoShare(company.getCompanyName(),"");
     }
 
     public ZhongXinBaoInfo getBusinessInfo(Integer companyId) {
@@ -1031,11 +1060,23 @@ public class CompanyService {
         if(company==null||StringUtils.isBlank(company.getCompanyName())){
             return null;
         }
-        Optional<ZhongXinBaoInfo> zhongXinBaoInfo = commonMapper.getZhongXinBaoInfo(company.getCompanyName());
+        Optional<ZhongXinBaoInfo> zhongXinBaoInfo = commonMapper.getZhongXinBaoInfo(company.getCompanyName(),"");
         if(zhongXinBaoInfo.isPresent()){
             return zhongXinBaoInfo.get();
         }
         return null;
+    }
+
+    public HashMap<String,Object> getBusinessInfo(String name,String engName,HashMap<String,Object> hs) {
+        Optional<ZhongXinBaoInfo> zhongXinBaoInfo = commonMapper.getZhongXinBaoInfo(name,engName);
+        List<ZhongXinBaoShare> zhongXinBaoShare = commonMapper.getZhongXinBaoShare(name,engName);
+        List<ZhongXinBaoPDF> zhongXinBaoPdf =  pdfMapper.selectZhongXinBaoPDF(name,engName);
+
+        hs.put("businessInfo",zhongXinBaoInfo.get());
+        hs.put("shareList",zhongXinBaoShare);
+        hs.put("pdfList",zhongXinBaoPdf);
+        hs.put("code","0");
+        return hs;
     }
 
     public InputStream getFinancialDeminingHtml(Company company, Map<String, Object> param) {
@@ -1131,6 +1172,24 @@ public class CompanyService {
 
         reportParam.put("reportData",reportData);
         return reportUrl;
+    }
+
+    /**
+     * 根据公司工号查找对应公司工号校验规则
+     * @param code   公司code
+     * @return
+     */
+    public CompanyIDVerification getCompanyIDVerification(String code){
+        return companyIDVerificationDao.findByCode(code);
+    }
+
+    /**
+     *  获取公司状态
+     * @param companyCode  公司code
+     * @return 1 启用  0 没有启用
+     */
+    public String getCompanyStatus(String companyCode){
+        return commonsMapper.getCompanyStatus(companyCode);
     }
 
 }

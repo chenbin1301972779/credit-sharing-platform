@@ -56,6 +56,8 @@ public class UserService {
     @Autowired
     private UsersMapper usersMapper;
 
+    @Autowired
+    private RoleDao roleDao;
 
     public UserFocus saveRelation(HashMap<String, Object> hs, Integer userId, Integer companyId, Map<String, Integer> relations) {
         Map<String,Integer> resultMap = Maps.newHashMap();
@@ -229,8 +231,9 @@ public class UserService {
             if(email!=null){
                 user.setEmail(email);
             }
-            if(permissionRoles!=null){
+            if(permissionRoles!= null){
                 user.setPermissionRoles(permissionRoles);
+                user.setRoleName(permissionRoles);
             }
             User result = userDao.saveAndFlush(user);
             if(isNew){//新增用户同步到FR
@@ -238,6 +241,7 @@ public class UserService {
             }
             updatePermission(operator, result.getUserId(), permissionRoles);
             result.setPermissionRoles(permissionRoles);
+            result.setRoleName(permissionRoles);
             return result;
         }
         return null;
@@ -260,23 +264,74 @@ public class UserService {
         List<UserPermission> oldPermissionList = userPermissionDao.findAllByUserIdAndPermissionStatus(userId,"1");
         userPermissionDao.deleteAll(oldPermissionList);
         if(StringUtils.isBlank(permissionRoles)){
+            String permission = "信保报告申请权限,信保报告列表权限,客商初筛权限,消息中心权限,黑名单申请权限";
+            String[] splitPermission = permission.split(",");
+            for(String permissionStr:splitPermission){
+                UserPermission userPermission = new UserPermission();
+                userPermission.setUserId(userId);
+                userPermission.setPermissionRole(getPermissionStr(permissionStr));
+                userPermission.setPermissionStatus("1");
+                userPermission.setUpdateBy(operator);
+                userPermission.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+                permissionList.add(userPermission);
+            }
+            userPermissionDao.saveAll(permissionList);
             userPermissionDao.flush();
             return;
         }
         String[] split = permissionRoles.split(",");
-        for(String permissionStr:split){
-            UserPermission userPermission = new UserPermission();
-            userPermission.setUserId(userId);
-            userPermission.setPermissionRole(permissionStr);
-            userPermission.setPermissionStatus("1");
-            userPermission.setUpdateBy(operator);
-            userPermission.setUpdateTime(new Timestamp(System.currentTimeMillis()));
-            permissionList.add(userPermission);
+
+        for(String rolePermission:split){
+            Optional<Role> byRoleName = roleDao.findByRoleName(rolePermission);
+            if(byRoleName.isPresent()){
+                Role role = byRoleName.get();
+                String permission = role.getPermission();
+                String[] splitPermission = permission.split(", ");
+                for(String permissionStr:splitPermission){
+                    UserPermission userPermission = new UserPermission();
+                    userPermission.setUserId(userId);
+                    userPermission.setPermissionRole(getPermissionStr(permissionStr));
+                    userPermission.setPermissionStatus("1");
+                    userPermission.setUpdateBy(operator);
+                    userPermission.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+                    permissionList.add(userPermission);
+                }
+            }
+
         }
         userPermissionDao.saveAll(permissionList);
         userPermissionDao.flush();
     }
-
+    private String getPermissionStr(String permissionStr){
+        String str = null;
+        switch (permissionStr){
+            case "黑名单审批权限":
+                str = "reviewer";
+                break;
+            case "黑名单申请权限":
+                str = "applicant";
+                break;
+            case "用户子管理权限":
+                str = "sub_admin";
+                break;
+            case "信保报告审批权限":
+                str = "zxb_report_reviewer";
+                break;
+            case "客商初筛权限":
+                str = "merchant";
+                break;
+            case "信保报告申请权限":
+                str = "zxb_report_apply";
+                break;
+            case "信保报告列表权限":
+                str = "zxb_report_list";
+                break;
+            case "消息中心权限":
+                str = "news_all";
+                break;
+        }
+        return str;
+    }
     public List<User> searchUserList(HashMap<String, Object> hs, Integer pageIndex, Integer pageSize, String username, String name, Integer status) {
         if(pageIndex==null||pageSize==null){
             return null;
@@ -529,5 +584,87 @@ public class UserService {
         hs.put("userList",userList);
         hs.put("code",0);
         return hs;
+    }
+
+
+    /**
+     * 获取角色管理列表
+     * @return
+     */
+    public  Page<Role>  getAllRole(Map<String,Object> param) {
+        Sort sort = Sort.by("roleId").descending();
+        Integer pageIndex = CommonUtils.getIntegerValue(param.get("pageIndex"));
+        Integer pageSize = CommonUtils.getIntegerValue(param.get("pageSize"));
+        PageRequest pageable = PageRequest.of(pageIndex - 1, pageSize,sort);
+        return  roleDao.findAll(pageable);
+    }
+    public  List<Role> getAllRole() {
+        return  roleDao.findAll();
+    }
+    public Optional<User> getRolePermission(Integer id) {
+        return  userDao.findById(id);
+    }
+
+        /**
+         * 获取角色
+         * @return
+         */
+    public  Optional<Role>  getRole(String roleId) {
+        return  roleDao.findByRoleId(roleId);
+    }
+
+    public Optional<Role> roleNameExists(String roleName){
+        return  roleDao.findByRoleName(roleName);
+    }
+
+    public Role saveOrEditRole(Map<String,Object> param){
+        String roleId = (String)param.get("roleId");
+        String roleName = (String)param.get("roleName");
+        Boolean isNew = (Boolean)param.get("isNew");
+        ArrayList permission = (ArrayList) param.get("permission");
+
+        Role role = new Role();
+        if(StringUtils.isNotBlank(roleId)){
+            Optional<Role> editRole = this.getRole(roleId);
+            if(editRole.isPresent()){
+                role = editRole.get();
+            }
+        }else{
+            role.setRoleId(UUID.randomUUID().toString());
+        }
+
+        if(StringUtils.isBlank(roleName) || permission.size() <= 0){
+            return null;
+        }
+        String oldRoleName = role.getRoleName();
+        role.setRoleName(roleName);
+        role.setPermission(permission.toString().replace("[","").replace("]",""));
+       if(!isNew){
+//           List<User> users = updateUserPermission(roleName);
+           List<User> users = updateUserPermission(oldRoleName);
+           if(null == users || !(users.size() >0)){
+               return  null;
+           }
+           for(User user : users){
+               String roleNameStr = user.getRoleName().replace(oldRoleName,roleName);
+               user.setRoleName(roleNameStr);
+               updatePermission("admin",user.getUserId(),roleNameStr);
+           }
+       }
+        roleDao.saveAndFlush(role);
+        return role;
+    }
+
+    public List<User> updateUserPermission(String roleName){
+        return userDao.findAllByRoleNameLike("%"+roleName+"%");
+    }
+
+    public  Optional<Role> getRoleByRoleName(String roleName){
+        return roleDao.findByRoleName(roleName);
+    }
+
+
+    public String getReviewer(String userName) {
+        return usersMapper.getReviewer(userName);
     }
 }

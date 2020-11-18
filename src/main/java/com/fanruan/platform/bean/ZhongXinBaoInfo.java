@@ -6,7 +6,7 @@ import lombok.Data;
 public class ZhongXinBaoInfo {
 
     private String buyerchnName;
-
+    private String buyerengName;
     private String sinosureBuyerno;
 
     private String reportNo;

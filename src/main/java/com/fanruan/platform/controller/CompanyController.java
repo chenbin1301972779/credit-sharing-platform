@@ -123,12 +123,13 @@ public class CompanyController {
     public String getBaseInfo( @RequestBody Map<String,Object> param) throws JsonProcessingException {
         HashMap<String,Object> hs=new HashMap<>();
         Integer companyId = CommonUtils.getIntegerValue(param.get("companyId"));
+        Integer userId = CommonUtils.getIntegerValue(param.get("userId"));
         ObjectMapper objectMapper=new ObjectMapper();
         if(companyId==null){
             hs.put("code","1");
             hs.put("msg","查询公司基本信息失败，companyId为空");
         }else {
-            TianYanChaInfo tianYanChaInfo =  companyService.getTianYanChaInfo(companyId);
+            TianYanChaInfo tianYanChaInfo =  companyService.getTianYanChaInfo(companyId,userId);
             if(tianYanChaInfo==null){
                 hs.put("code","2");
                 hs.put("msg","查询公司基本信息失败");
@@ -348,10 +349,10 @@ public class CompanyController {
     @RequestMapping(value = "/company/zhongxinbao/getBusinessInfo", method = RequestMethod.POST)
     @ResponseBody
     public String getBusinessInfo( @RequestBody Map<String,Object> param) throws JsonProcessingException {
-        HashMap<String,Object> hs=new HashMap<>();
-        ObjectMapper objectMapper=new ObjectMapper();
+        HashMap<String,Object> hs = new HashMap<>();
+        ObjectMapper objectMapper = new ObjectMapper();
         Integer companyId = CommonUtils.getIntegerValue(param.get("companyId")) ;
-        ZhongXinBaoInfo zhongXinBaoInfo = companyService.getBusinessInfo(companyId);
+        ZhongXinBaoInfo zhongXinBaoInfo  = companyService.getBusinessInfo(companyId);
         if(zhongXinBaoInfo==null){
             hs.put("code",1);
             hs.put("businessInfo",zhongXinBaoInfo);
@@ -363,7 +364,25 @@ public class CompanyController {
         }
         return objectMapper.writeValueAsString(hs);
     }
-
+    @RequestMapping(value = "/company/zhongxinbao/getAllBusinessInfo", method = RequestMethod.POST)
+    @ResponseBody
+    public String getAllBusinessInfo( @RequestBody Map<String,Object> param) throws JsonProcessingException {
+        HashMap<String,Object> hs=new HashMap<>();
+        ObjectMapper objectMapper=new ObjectMapper();
+        String reportcorpchnname = (String)param.get("reportcorpchnname");
+        String reportcorpengname = (String)param.get("reportcorpengname");
+        if(StringUtils.isNotBlank(reportcorpchnname) || StringUtils.isNotBlank(reportcorpengname)){
+            hs = companyService.getBusinessInfo(reportcorpchnname,reportcorpengname,hs);
+        }
+        if(hs.isEmpty()){
+            hs.put("code",1);
+            hs.put("businessInfo",null);
+            hs.put("shareList",null);
+            hs.put("pdfList",null);
+            hs.put("msg","查询不到基本信息或者参数有误");
+        }
+        return objectMapper.writeValueAsString(hs);
+    }
 
     private void buildEntrustApprove(ArrayOfEntrustInput arrayOfEntrustInput, EntrustInput entrustInput, Map<String, Object> param) {
 
@@ -403,13 +422,12 @@ public class CompanyController {
         entrustInput.setCorpSerialNo(getJAXBElement("corpSerialNo",corpSerialNo));
         entrustInput.setClientNo(getJAXBElement("clientNo",clientNo));
         entrustInput.setCreditno(getJAXBElement("creditno",creditno));
+        String reportCorpChnName = (String) param.get("reportCorpChnName");
+        String reportCorpEngName = (String) param.get("reportCorpEngName");
         if(StringUtils.isBlank(reportbuyerNo)){
             String reportCorpCountryCode = (String) param.get("reportCorpCountryCode");
-            String reportCorpChnName = (String) param.get("reportCorpChnName");
-            String reportCorpEngName = (String) param.get("reportCorpEngName");
             String reportCorpaddress = (String) param.get("reportCorpaddress");
             String istranslation = String.valueOf(CommonUtils.getIntegerValue(param.get("istranslation"))) ;
-
             entrustInput.setReportCorpCountryCode(getJAXBElement("reportCorpCountryCode",reportCorpCountryCode));
             entrustInput.setReportCorpChnName(getJAXBElement("reportCorpChnName",reportCorpChnName));
             entrustInput.setReportCorpEngName(getJAXBElement("reportCorpEngName",reportCorpEngName));
@@ -422,6 +440,8 @@ public class CompanyController {
             String istranslation = String.valueOf(CommonUtils.getIntegerValue(param.get("istranslation"))) ;
             entrustInput.setIstranslation(getJAXBElement("istranslation",istranslation));
             entrustInput.setCreditno(getJAXBElement("creditno",creditno));
+            entrustInput.setReportCorpChnName(getJAXBElement("reportCorpChnName",reportCorpChnName));
+            entrustInput.setReportCorpEngName(getJAXBElement("reportCorpEngName",reportCorpEngName));
         }
         arrayOfEntrustInput.getEntrustInput().add(entrustInput);
     }
@@ -445,7 +465,7 @@ public class CompanyController {
             hs.put("msg","未查询到公司或者公司名为空");
             return objectMapper.writeValueAsString(hs);
         }
-        List<ZhongXinBaoPDF> zhongXinBaoPDFS = pdfMapper.selectZhongXinBaoPDF(company.getCompanyName());
+        List<ZhongXinBaoPDF> zhongXinBaoPDFS = pdfMapper.selectZhongXinBaoPDF(company.getCompanyName(),"");
         if(CollectionUtils.isEmpty(zhongXinBaoPDFS)){
             hs.put("code","3");
             hs.put("msg","服务器上未查询到该公司pdf文件");
@@ -492,7 +512,7 @@ public class CompanyController {
     public String getPDF(HttpServletResponse response, @RequestBody Map<String,Object> param) throws JsonProcessingException {
         HashMap<String,Object> hs=new HashMap<>();
         ObjectMapper objectMapper=new ObjectMapper();
-        String noticeSerialno = (String)param.get("noticeSerialno") ;
+        String noticeSerialno = (String)param.get("noticeSerialno");
         String filePath = "/home/ftpuser/";
         String fileName = noticeSerialno;
         File file = new File(filePath+fileName);
@@ -523,5 +543,34 @@ public class CompanyController {
         hs.put("msg","");
         return objectMapper.writeValueAsString(hs);
     }
+
+
+
+
+    @RequestMapping(value = "/company/getCompanyIDVerification", method = RequestMethod.POST)
+    @ResponseBody
+    public String getCompanyIDVerification( @RequestBody Map<String,Object> param) throws JsonProcessingException {
+        HashMap<String,Object> hs=new HashMap<>();
+        ObjectMapper objectMapper=new ObjectMapper();
+        String code = (String)param.get("code");
+        if(StringUtils.isBlank(code)){
+            hs.put("code",1);
+            hs.put("CompanyIDVerification","");
+            hs.put("msg","工号不能为空");
+            return objectMapper.writeValueAsString(hs);
+        }
+        CompanyIDVerification companyIDVerification = companyService.getCompanyIDVerification(code);
+        if(null == companyIDVerification){
+            hs.put("CompanyIDVerification","");
+            hs.put("code",2);
+            hs.put("msg","未查询到工号校验规则");
+            return objectMapper.writeValueAsString(hs);
+        }
+        hs.put("code",0);
+        hs.put("CompanyIDVerification",companyIDVerification);
+        hs.put("msg","");
+        return objectMapper.writeValueAsString(hs);
+    }
+
 
 }

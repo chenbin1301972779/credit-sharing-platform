@@ -16,4 +16,5 @@ public class ZhongXinBaoPDFList {
     private String reportcorpengname;
     private String reportName;
     private String updatetime;
+    private String getTime; //更新时间
 }

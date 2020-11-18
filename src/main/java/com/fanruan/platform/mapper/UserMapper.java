@@ -23,6 +23,11 @@ public interface UserMapper {
 
     @Select(
             "<script> \n" +
+        " with ds1 as(\n" +
+        "        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.ODS_HR_ORG WHERE ENABLESTATE='2'\n" +
+        "        UNION\n" +
+        "        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG WHERE ENABLESTATE='1'\n" +
+        "        )"+
             "SELECT M.* FROM ( "+
             "SELECT ROWNUM AS rowno,N.* " +
             "FROM ( \n" +
@@ -32,10 +37,11 @@ public interface UserMapper {
             "t.password as password,\n" +
             "t.mobile as mobile,\n" +
             "t.email as email,\n" +
-            "t.company_name as companyName,\n" +
+            "ds1.NAME as companyName,\n" +
             "t.dept_name as deptName,\n" +
             "t.name as name,\n" +
-            "t.company_code as companyCode,\n" +
+                    "t.ROLE_NAME as roleName,\n" +
+            "ds1.CODE as companyCode,\n" +
             "t.dept_code as deptCode,\n" +
             "t.status as status,\n" +
             "t.newcompany_flag as newcompanyFlag,\n" +
@@ -46,7 +52,7 @@ public interface UserMapper {
             "  ELSE \n" +
             "    0\n" +
             "  END as isSubAdmin\n" +
-            "FROM CREDIT_USER T \n" +
+            "FROM CREDIT_USER T  LEFT JOIN ds1 on t.company_code = ds1.CODE\n" +
             "WHERE username &lt;&gt; 'admin' \n" +
             "<if test=\"name != null and name!=''\">\n" +
             " and (t.name like '%'||#{name, jdbcType=VARCHAR}||'%' ) \n" +
@@ -84,7 +90,9 @@ public interface UserMapper {
             @Result(property = "deptCode", column = "deptCode"),
             @Result(property = "status", column = "status"),
             @Result(property = "newCompanyFlag", column = "newcompanyFlag"),
-            @Result(property = "permissionRoles", column = "permissionRoles")
+            @Result(property = "permissionRoles", column = "permissionRoles"),
+            @Result(property = "roleName", column = "roleName")
+
     })
     public List<User> getUserList(@Param("pageIndex") Integer pageIndex,
                                   @Param("pageSize") Integer pageSize,
@@ -97,6 +105,11 @@ public interface UserMapper {
 
     @Select(
             "<script> \n" +
+                    " with ds1 as(\n" +
+                    "        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.ODS_HR_ORG WHERE ENABLESTATE='2'\n" +
+                    "        UNION\n" +
+                    "        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG WHERE ENABLESTATE='1'\n" +
+                    "        )"+
                     "SELECT COUNT(*) as co FROM ( \n" +
                     "SELECT \n" +
                     "ROWNUM AS rowno, \n" +
@@ -105,10 +118,10 @@ public interface UserMapper {
                     "t.password as password,\n" +
                     "t.mobile as mobile,\n" +
                     "t.email as email,\n" +
-                    "t.company_name as companyName,\n" +
+                    "ds1.NAME as companyName,\n" +
                     "t.dept_name as deptName,\n" +
                     "t.name as name,\n" +
-                    "t.company_code as companyCode,\n" +
+                    "ds1.CODE as companyCode,\n" +
                     "t.dept_code as deptCode,\n" +
                     "t.status as status,\n" +
                     "t.newcompany_flag as newcompanyFlag,\n" +
@@ -119,7 +132,7 @@ public interface UserMapper {
                     "  ELSE \n" +
                     "    0\n" +
                     "  END as isSubAdmin\n" +
-                    "FROM CREDIT_USER T \n" +
+                    "FROM CREDIT_USER T  LEFT JOIN ds1 on t.company_code = ds1.CODE\n" +
                     "WHERE username &lt;&gt; 'admin' \n" +
                     "<if test=\"name != null and name!=''\">\n" +
                     " and (t.name like '%'||#{name, jdbcType=VARCHAR}||'%' ) \n" +

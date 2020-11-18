@@ -19,6 +19,8 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Author zjt
@@ -49,6 +51,19 @@ File file = new File("D:\\913300007804762286_15966381082593632751584700256032.ht
 //        email.setContextType("text/html;charset=utf-8");
 //        boolean flag = EmailSend.sendEmail(email);
 //        System.err.println("邮件发送结果=="+flag);
+        Map<String, Object> param = new HashMap<>();
+        param.put("a","SSSSSSSSSS");
+        param.put("ab","SSSSSSSSSS");
+        param.put("ade","SSSSSSSSSS");
+        param.put("aaCode","SSSSSSSSSS");
+        param.put("areCode","SSSSSSSSSS");
+        param.put("areaCode","SSSSSSSSSS");
+
+        param.put("areaCode","SSSSSSSSSS11111");
+
+        System.out.println(param.toString());
+
+
     }
 
  

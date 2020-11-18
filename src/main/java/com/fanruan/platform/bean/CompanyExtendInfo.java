@@ -51,6 +51,14 @@ public class CompanyExtendInfo {
     private String extendInfo;
 
     /**
+     * 用户id
+     */
+    @Column(name="UPDATEBY")
+    private Integer updateby;
+
+
+
+    /**
      * 数据更新时间
      */
     @Column(name="update_time")

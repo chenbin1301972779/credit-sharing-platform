@@ -402,7 +402,6 @@ public class ReportController {
                 IOUtils.copy(is,new FileOutputStream(temp));
                 long length = temp.length();
                 if(length>1024){
-
                     FileInputStream fileIs = new FileInputStream(temp);
                     Report report = companyService.saveReport(company,param, fileIs,reportType);
                     FileInputStream fileInput = new FileInputStream(temp);
@@ -413,7 +412,7 @@ public class ReportController {
                     hs.put("code","0");
                 }else {
                     hs.put("code","3");
-                    hs.put("msg","请求参数有误！");
+                    hs.put("msg","非常抱歉，第三方接口相关数据无法获取，报告无法生成！");
                 }
             } catch (Exception e) {
                 e.printStackTrace();

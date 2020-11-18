@@ -1,7 +1,9 @@
 package com.fanruan.platform.controller;
 
 import com.fanruan.platform.bean.PermissionPoint;
+import com.fanruan.platform.bean.Role;
 import com.fanruan.platform.bean.User;
+import com.fanruan.platform.bean.UserPermission;
 import com.fanruan.platform.constant.CommonUtils;
 import com.fanruan.platform.mapper.PdfMapper;
 import com.fanruan.platform.mapper.UserMapper;
@@ -14,12 +16,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping
@@ -55,6 +59,9 @@ public class UserController{
             password = MD5Util.MD5(username+password);
             user =  userService.getUserCheck(username,password);
         }
+
+
+
         if(user==null){
             hs.put("code","2");
             String msg = loginType!=null?"用户名错误或者被停用":"用户名或者密码错误或者被停用";
@@ -62,6 +69,14 @@ public class UserController{
             ObjectMapper objectMapper=new ObjectMapper();
             return objectMapper.writeValueAsString(hs);
         }
+        String companyStatus = companyService.getCompanyStatus(user.getCompanyCode());
+        if("0".equals(companyStatus)){
+            hs.put("code","3");
+            hs.put("msg","公司已停用，请联系上级管理员");
+            ObjectMapper objectMapper=new ObjectMapper();
+            return objectMapper.writeValueAsString(hs);
+        }
+
         String token= TokenUtil.sign(user);
         hs.put("code","0");
         hs.put("msg","登录成功");
@@ -69,6 +84,7 @@ public class UserController{
         hs.put("username",username);
         hs.put("name",user.getName());
         hs.put("userId",user.getUserId());
+        hs.put("companyCode",user.getCompanyCode());
         request.getSession().setAttribute("username", username);
         ObjectMapper objectMapper=new ObjectMapper();
         return objectMapper.writeValueAsString(hs);
@@ -187,7 +203,7 @@ public class UserController{
             userList = (List<User> )hs.get("userList");
         }else{
             hs = userService.getUserList(hs,pageIndex,pageSize,username,name,status,isSubAdmin,companyCode);
-            userList = (List<User> )hs.get("userList");
+            userList = (List<User>)hs.get("userList");
         }
         userList = userService.fillUpdatePermissionNew(hs,userList,operator);
         hs.put("userList",userList);
@@ -339,6 +355,125 @@ public class UserController{
             hs.put("msg",e.getMessage());
         }
         ObjectMapper objectMapper=new ObjectMapper();
+        return objectMapper.writeValueAsString(hs);
+    }
+
+    @RequestMapping(value = "/user/getAllRole",method = RequestMethod.POST)
+    @ResponseBody
+    public String getAllRole(@RequestBody Map<String,Object> param) throws JsonProcessingException {
+        HashMap<String,Object> hs=new HashMap<>();
+        ObjectMapper objectMapper=new ObjectMapper();
+        Page<Role> allRole = userService.getAllRole(param);
+        if(null == allRole){
+            hs.put("code",1);
+            hs.put("msg","未查询到角色信息");
+            hs.put("allRole","");
+            return objectMapper.writeValueAsString(hs);
+        }
+        hs.put("code",0);
+        hs.put("msg","");
+        hs.put("totalPages",allRole.getTotalPages());
+        hs.put("totalRecords",allRole.getTotalElements());
+        hs.put("allRole",allRole);
+        return objectMapper.writeValueAsString(hs);
+    }
+
+    @RequestMapping(value = "/user/getRolePermission",method = RequestMethod.POST)
+    @ResponseBody
+    public String getRolePermission(@RequestBody Map<String,Object> param) throws JsonProcessingException {
+        HashMap<String,Object> hs = new HashMap<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+        Integer userId = CommonUtils.getIntegerValue(param.get("userId"));
+        Optional<User> role = userService.getRolePermission(userId);
+
+        if(1 == userId){
+            List<Role> allRole = userService.getAllRole();
+            hs.put("code",0);
+            hs.put("msg","");
+            hs.put("allRole",allRole);
+            return objectMapper.writeValueAsString(hs);
+        }
+
+
+        if(!role.isPresent()){
+            hs.put("code",1);
+            hs.put("msg","未查询到角色信息");
+            hs.put("allRole","");
+            return objectMapper.writeValueAsString(hs);
+        }
+        User user = role.get();
+        if(null == user ||  StringUtils.isBlank(user.getRoleName())){
+            hs.put("code",1);
+            hs.put("msg","未查询到用户权限信息");
+            hs.put("allRole","");
+            return objectMapper.writeValueAsString(hs);
+        }
+            String[] split = user.getRoleName().split(",");
+            List<Role> permissions = new ArrayList<>();
+            for(String permissionStr:split){
+                Optional<Role> permission = userService.getRoleByRoleName(permissionStr);
+                if(permission.isPresent()){
+                    permissions.add(permission.get());
+                }
+            }
+            hs.put("code",0);
+            hs.put("msg","");
+            hs.put("allRole",permissions);
+            return objectMapper.writeValueAsString(hs);
+
+
+    }
+
+    @RequestMapping(value = "/user/saveOrEditRole",method = RequestMethod.POST)
+    @ResponseBody
+    public String saveOrEditRole(@RequestBody Map<String,Object> param) throws JsonProcessingException {
+        HashMap<String,Object> hs=new HashMap<>();
+        ObjectMapper objectMapper=new ObjectMapper();
+        Role role = userService.saveOrEditRole(param);
+        if(null == role){
+            hs.put("code","1");
+            hs.put("msg","角色名称和权限不能为空");
+            hs.put("role",role);
+            return objectMapper.writeValueAsString(hs);
+        }
+        hs.put("code","0");
+        hs.put("msg","角色更新成功");
+        hs.put("role",role);
+        return objectMapper.writeValueAsString(hs);
+    }
+    @RequestMapping(value = "/user/roleNameExists",method = RequestMethod.POST)
+    @ResponseBody
+    public String roleNameExists(@RequestBody Map<String,Object> param) throws JsonProcessingException {
+        HashMap<String,Object> hs=new HashMap<>();
+        ObjectMapper objectMapper=new ObjectMapper();
+        Boolean isNew = (Boolean)param.get("isNew");
+        String roleId = (String)param.get("roleId");
+        String roleName = (String)param.get("roleName");
+        if(StringUtils.isBlank(roleName)){
+            return  null;
+        }
+        Optional<Role> role = userService.roleNameExists(roleName);
+        if((role.isPresent() && isNew)|| (role.isPresent() && !isNew && !(roleId.equals(role.get().getRoleId())))){
+            hs.put("roleNameExists",true);
+        }else{
+            hs.put("roleNameExists",false);
+        }
+        return objectMapper.writeValueAsString(hs);
+    }
+
+    @RequestMapping(value = "/user/getReviewer",method = RequestMethod.POST)
+    @ResponseBody
+    public String getReviewer(@RequestBody Map<String,Object> param) throws JsonProcessingException {
+        HashMap<String,Object> hs=new HashMap<>();
+        ObjectMapper objectMapper=new ObjectMapper();
+        String userName = (String)param.get("userName");
+        String isReviewer = userService.getReviewer(userName);
+        hs.put("isReviewer",false);
+        if("1".equals(isReviewer)){
+            hs.put("isReviewer",true);
+        }
+        hs.put("msg","");
+        hs.put("code","0");
         return objectMapper.writeValueAsString(hs);
     }
 }

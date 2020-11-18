@@ -30,6 +30,8 @@ public class UserPermission {
     @Column(name="permission_status")
     private String permissionStatus;
 
+    @Column(name="ROLE_NAME")
+    private String roleName;
 
     @Column(name="update_time")
     private Timestamp updateTime;

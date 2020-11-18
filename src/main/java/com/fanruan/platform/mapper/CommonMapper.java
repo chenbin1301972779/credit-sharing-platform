@@ -8,7 +8,8 @@ import java.util.Optional;
 
 @Mapper
 public interface CommonMapper {
-    @Select("SELECT\n" +
+    @Select("<script> " +
+            "SELECT DISTINCT\n" +
             "S.NAME,--股东名称\n" +
             "S.RATIO,--持股比例（%)\n" +
             "S.SHARESHOLD,--股份数额\n" +
@@ -27,7 +28,11 @@ public interface CommonMapper {
             "   NOTICESERIALNO\n" +
             ") D ON D .MAXTIME = S.UPDATETIME AND D.NOTICESERIALNO=S.NOTICESERIALNO\n" +
             "INNER JOIN ODS_ZXB_RATINGINFO F ON F.NOTICESERIALNO=S.NOTICESERIALNO " +
-            "WHERE F.BUYERCHNNAME = #{name, jdbcType=VARCHAR}")
+            "WHERE 1 = 1" +
+            "<if test=\"name != null or engName != null\">"+
+            " and (F.BUYERCHNNAME = #{name, jdbcType=VARCHAR}  OR  F.BUYERENGNAME = #{engName, jdbcType=VARCHAR}) "+
+            "</if> "
+        +"</script> ")
     @Results(id="zhongXinBaoShare",  value={
             @Result(property="name", column="NAME"),
             @Result(property="ratio", column="RATIO"),
@@ -35,7 +40,7 @@ public interface CommonMapper {
             @Result(property="valueHold", column="VALUEHOLD"),
             @Result(property="valueUSD", column="VALUEUSD")
     })
-    public List<ZhongXinBaoShare> getZhongXinBaoShare(@Param("name") String name);
+    public List<ZhongXinBaoShare> getZhongXinBaoShare(@Param("name") String name,@Param("engName") String engName);
 
     @Select("select PERMISSION_ROLE,PERMISSION_ROLE_NAME  \n" +
             "from CREDIT_PERMISSOION_POINT where PERMISSION_ROLE is not null GROUP BY PERMISSION_ROLE,PERMISSION_ROLE_NAME ")
@@ -124,45 +129,60 @@ public interface CommonMapper {
 
 
 
-    @Select("SELECT \n" +
-            "BUYERCHNNAME,--中文名称 \n" +
-            "SINOSUREBUYERNO,--信保代码 \n" +
-            "REPORTNO,--报告编号 \n" +
-            "LEGALFORM,--注册形式 \n" +
-            "DATEREGISTERED,--注册时间 \n" +
-            "REGISTERCAPITAL,--注册资本（人民币） \n" +
-            "REGISTERADDR,--注册地址 \n" +
-            "EMPLOYEENUM,--员工数量 \n" +
-            "BRANCHEMPLOYEENUM,--分支雇员数 \n" +
-            "CASE OPERATIONSTATUS WHEN '1' THEN '正常经营' \n" +
-            "WHEN '2' THEN '停歇业/休眠' \n" +
-            "WHEN '3' THEN '无有效注册' \n" +
-            "WHEN '4' THEN '破产保护' \n" +
-            "WHEN '5' THEN '破产清算' \n" +
-            "WHEN '6' THEN '被并购撤销' \n" +
-            "WHEN '9' THEN '其他' END AS OPERATIONSTATUS, --经营状态 \n" +
-            "PARENT, --母公司 \n" +
-            "CASE LISTEDFLAG WHEN  '1' THEN '是' WHEN '0' THEN '否' ELSE '未维护' END AS  LISTEDFLAG,--是否上市 \n" +
-            "TOCKEXCHANGE,--股票交易所 \n" +
-            "PRODUCTS,--主营业务 \n" +
-            "I.INDUSTNAME,--所属行业 \n" +
-            "PRODUCTIONCAPACITY,--生产现状 \n" +
-            "CASE LOCATION  WHEN '1' THEN '商业区' WHEN '2' THEN '工业区' WHEN '3' THEN '居民区' WHEN '4' THEN '港口' ELSE '其他' END AS LOCATIONTYPE,--经营地类型 \n" +
-            "PURCHASINGAREA,--采购地区 \n" +
-            "FOREIGNPURCHASERATIO, --采购总金额中国外采购所占比例（%）\n" +
-            " round(((months_between(TO_DATE( to_char(sysdate,'yyyy-MM-dd') ,'yyyy-mm-dd hh24:mi:ss'),TO_DATE(DATEREGISTERED,'yyyy-mm-dd hh24:mi:ss')))/12),0)||'年' as GISTERYEAR, --年限 \n" +
-            "UPDATETIME --报告日期\n" +
+    @Select("<script> " +
+            "SELECT\n" +
+            "BUYERCHNNAME,\n" +
+            "BUYERENGNAME,\n" +
+            "SINOSUREBUYERNO,\n" +
+            "REPORTNO,\n" +
+            "LEGALFORM,\n" +
+            "DATEREGISTERED,\n" +
+            "REGISTERCAPITAL,\n" +
+            "REGISTERADDR,\n" +
+            "EMPLOYEENUM,\n" +
+            "BRANCHEMPLOYEENUM,\n" +
+            "CASE OPERATIONSTATUS WHEN '1' THEN '正常经营'\n" +
+            "WHEN '2' THEN '停歇业/休眠'\n" +
+            "WHEN '3' THEN '无有效注册'\n" +
+            "WHEN '4' THEN '破产保护'\n" +
+            "WHEN '5' THEN '破产清算'\n" +
+            "WHEN '6' THEN '被并购撤销'\n" +
+            "WHEN '9' THEN '其他' END AS OPERATIONSTATUS,\n" +
+            "PARENT,\n" +
+            "CASE LISTEDFLAG WHEN  '1' THEN '是' WHEN '0' THEN '否' ELSE '未维护' END AS  LISTEDFLAG,\n" +
+            "TOCKEXCHANGE,\n" +
+            "PRODUCTS,\n" +
+            "I.INDUSTNAME,\n" +
+            "PRODUCTIONCAPACITY,\n" +
+            "CASE LOCATION  WHEN '1' THEN '商业区' WHEN '2' THEN '工业区' WHEN '3' THEN '居民区' WHEN '4' THEN '港口' ELSE '其他' END AS LOCATIONTYPE,\n" +
+            "PURCHASINGAREA,\n" +
+            "FOREIGNPURCHASERATIO,\n" +
+            " round(((months_between(TO_DATE( to_char(sysdate,'yyyy-MM-dd') ,'yyyy-mm-dd hh24:mi:ss'),TO_DATE(DATEREGISTERED,'yyyy-mm-dd hh24:mi:ss')))/12),0)||'年' as gisteryear,\n" +
+            "UPDATETIME\n" +
             "FROM\n" +
             " ODS_ZXB_RATINGINFO R\n" +
             "INNER JOIN (\n" +
-            " SELECT NOTICESERIALNO, MAX (UPDATETIME) MAXTIME \n" +
-            " FROM ODS_ZXB_RATINGINFO GROUP BY NOTICESERIALNO \n" +
-            ") D ON D .MAXTIME = R.UPDATETIME AND D.NOTICESERIALNO=R.NOTICESERIALNO \n" +
-            "LEFT JOIN DIM_ZXB_INDUSTRY I ON I.INDUSTCODE=R.CHINASIC \n" +
-            "WHERE R.BUYERCHNNAME = #{name, jdbcType=VARCHAR}")
+            " SELECT\n" +
+            "  NOTICESERIALNO,\n" +
+            "  MAX (UPDATETIME) MAXTIME\n" +
+            " FROM\n" +
+            "  ODS_ZXB_RATINGINFO\n" +
+            "   \n" +
+            " GROUP BY\n" +
+            "  NOTICESERIALNO\n" +
+            ") D ON D .MAXTIME = R.UPDATETIME AND D.NOTICESERIALNO=R.NOTICESERIALNO\n" +
+            "LEFT JOIN DIM_ZXB_INDUSTRY I ON I.INDUSTCODE=R.CHINASIC\n" +
+            "WHERE 1 = 1" +
+            "AND ROWNUM = 1"+
+            "<if test=\"name != null or engName != null\">"+
+            " and (R.BUYERCHNNAME = #{name, jdbcType=VARCHAR}  OR  R.BUYERENGNAME = #{engName, jdbcType=VARCHAR}) "+
+            "</if> " +
+            "</script> "
+    )
 
     @Results(id="zhongXinBaoInfo",  value={
             @Result(property="buyerchnName", column="BUYERCHNNAME"),
+            @Result(property="buyerengName", column="BUYERENGNAME"),
             @Result(property="sinosureBuyerno", column="SINOSUREBUYERNO"),
             @Result(property="reportNo", column="REPORTNO"),
             @Result(property="legalForm", column="LEGALFORM"),
@@ -188,6 +208,6 @@ public interface CommonMapper {
 
             @Result(property="updateTime", column="UPDATETIME")
     })
-    public Optional<ZhongXinBaoInfo> getZhongXinBaoInfo(@Param("name") String name);
+    public Optional<ZhongXinBaoInfo> getZhongXinBaoInfo(@Param("name") String name,@Param("engName") String engName);
 
 }

@@ -117,87 +117,87 @@
 
     <select id="getZxbApplyList" resultType="com.fanruan.platform.bean.ZhongXinBaoLog">
         with ds1 as(
-            SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.ODS_HR_ORG
-            UNION
-            SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG
+        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.ODS_HR_ORG
+        UNION
+        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG
         )
         SELECT
-            M.CORPSERIALNO_IMPORT as corpSerialNo,
-            M.CLIENTNO_IMPORT as clientNo,
-            M.REPORTBUYERNO as reportbuyerNo,
-            M.REPORTCORPCOUNTRYCODE as reportCorpCountryCode,
-            M.REPORTCORPCHNNAME as reportCorpChnName,
-            M.REPORTCORPENGNAME as reportCorpEngName,
-            M.REPORTCORPADDRESS as reportCorpaddress,
-            M.CREDITNO as creditno,
-            M.ISTRANSLATION as istranslation,
-            M.CORPSERIALNO_EXPORT as corpSerialNoOut,
-            M.APPROVECODE as approveCode,
-            M.APPROVEMSG as approveMsg,
-            M.CLIENTNO_EXPORT as clientNoOut,
-            M.OTHERMSG as otherMsg,
-            M.UPDATEBY as updateBy,
-            M.UPDATETIME as updateTime,
-            M.APPROVEBY as approveby,
-            M.APPROVEDATE as approveDate,
-            M.updateName as updateName,
-            M.approveName as approveName
+        M.CORPSERIALNO_IMPORT as corpSerialNo,
+        M.CLIENTNO_IMPORT as clientNo,
+        M.REPORTBUYERNO as reportbuyerNo,
+        M.REPORTCORPCOUNTRYCODE as reportCorpCountryCode,
+        M.REPORTCORPCHNNAME as reportCorpChnName,
+        M.REPORTCORPENGNAME as reportCorpEngName,
+        M.REPORTCORPADDRESS as reportCorpaddress,
+        M.CREDITNO as creditno,
+        M.ISTRANSLATION as istranslation,
+        M.CORPSERIALNO_EXPORT as corpSerialNoOut,
+        M.APPROVECODE as approveCode,
+        M.APPROVEMSG as approveMsg,
+        M.CLIENTNO_EXPORT as clientNoOut,
+        M.OTHERMSG as otherMsg,
+        M.UPDATEBY as updateBy,
+        M.UPDATETIME as updateTime,
+        M.APPROVEBY as approveby,
+        M.APPROVEDATE as approveDate,
+        M.updateName as updateName,
+        M.approveName as approveName
         FROM (SELECT ROWNUM AS rowno, N.*
-              FROM (SELECT T.*,
-                            U.NAME as updateName,
-                            P.NAME as approveName
-                    FROM LOG_ZXB_APPLY T
-                             LEFT JOIN CREDIT_USER U ON T.UPDATEBY = U.USERNAME
-                             LEFT JOIN CREDIT_USER P ON T.APPROVEBY = P.USERNAME
-                    WHERE 1 = 1
-                      AND U.COMPANY_CODE IN (
-                        SELECT CODE --自身
-                        FROM ds1 A
-                        WHERE  CODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
-                        UNION ALL
-                        SELECT CODE --下级公司
-                        FROM ds1 A
-                        WHERE SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
-                        UNION ALL
-                        SELECT B.CODE --下下级公司
-                        FROM ds1 A
-                                 INNER JOIN ds1 B ON A.CODE=B.SCODE
-                        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
-                        UNION ALL
-                        SELECT C.CODE --下下下级公司
-                        FROM ds1 A
-                                 INNER JOIN ds1 B ON A.CODE=B.SCODE
-                                 INNER JOIN ds1 C ON B.CODE=C.SCODE
-                        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
-                        UNION ALL
-                        SELECT D.CODE --下下下下级公司
-                        FROM ds1 A
-                                 INNER JOIN ds1 B ON A.CODE=B.SCODE
-                                 INNER JOIN ds1 C ON B.CODE=C.SCODE
-                                 INNER JOIN ds1 D ON C.CODE=D.SCODE
-                        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
-                    )
-                    ORDER BY updateTime DESC) N
-              WHERE 1 = 1
-                <if test="zxbCode != null and zxbCode!=''">
-                    and (N.reportbuyerNo like '%'||#{zxbCode}||'%' )
-                </if>
-                <if test="zxbCompanyName != null and zxbCompanyName!='' ">
-                    and (N.reportCorpChnName like '%'||#{zxbCompanyName}||'%' OR N.reportCorpEngName like '%'||#{zxbCompanyName}||'%' )
-                </if>
-                <if test="approveCode != null and approveCode != ''">
-                    and (N.approveCode = #{approveCode})
-                </if>
-                <if test="zxbInformant != null and zxbInformant!=''">
-                    and (N.updateBy like '%'||#{zxbInformant}||'%' )
-                </if>
-                <if test="zxbApprover != null and zxbApprover!=''">
-                    and (N.approveby like '%'||#{zxbApprover}||'%' )
-                </if>
-            ) M
+        FROM (SELECT T.*,
+        U.NAME as updateName,
+        P.NAME as approveName
+        FROM LOG_ZXB_APPLY T
+        LEFT JOIN CREDIT_USER U ON T.UPDATEBY = U.USERNAME
+        LEFT JOIN CREDIT_USER P ON T.APPROVEBY = P.USERNAME
         WHERE 1 = 1
-          AND rowno &lt;= #{pageIndex} * #{pageSize}
-          AND rowno &gt; (#{pageIndex}-1) * #{pageSize}
+        AND U.COMPANY_CODE IN (
+        SELECT CODE --自身
+        FROM ds1 A
+        WHERE  CODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
+        UNION ALL
+        SELECT CODE --下级公司
+        FROM ds1 A
+        WHERE SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
+        UNION ALL
+        SELECT B.CODE --下下级公司
+        FROM ds1 A
+        INNER JOIN ds1 B ON A.CODE=B.SCODE
+        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
+        UNION ALL
+        SELECT C.CODE --下下下级公司
+        FROM ds1 A
+        INNER JOIN ds1 B ON A.CODE=B.SCODE
+        INNER JOIN ds1 C ON B.CODE=C.SCODE
+        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
+        UNION ALL
+        SELECT D.CODE --下下下下级公司
+        FROM ds1 A
+        INNER JOIN ds1 B ON A.CODE=B.SCODE
+        INNER JOIN ds1 C ON B.CODE=C.SCODE
+        INNER JOIN ds1 D ON C.CODE=D.SCODE
+        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
+        )
+        ORDER BY updateTime DESC) N
+        WHERE 1 = 1
+        <if test="zxbCode != null and zxbCode!=''">
+            and (N.reportbuyerNo like '%'||#{zxbCode}||'%' )
+        </if>
+        <if test="zxbCompanyName != null and zxbCompanyName!='' ">
+            and (N.reportCorpChnName like '%'||#{zxbCompanyName}||'%' OR N.reportCorpEngName like '%'||#{zxbCompanyName}||'%' )
+        </if>
+        <if test="approveCode != null and approveCode != ''">
+            and (N.approveCode = #{approveCode})
+        </if>
+        <if test="zxbInformant != null and zxbInformant!=''">
+            and (updateName like '%'||#{zxbInformant}||'%' )
+        </if>
+        <if test="zxbApprover != null and zxbApprover!=''">
+            and (approveName like '%'||#{zxbApprover}||'%' )
+        </if>
+        ) M
+        WHERE 1 = 1
+        AND rowno &lt;= #{pageIndex} * #{pageSize}
+        AND rowno &gt; (#{pageIndex}-1) * #{pageSize}
     </select>
 
     <resultMap id="getZxbApplyListCountResultMap" type="java.lang.Integer">
@@ -206,65 +206,87 @@
 
     <select id="getZxbApplyListCount" resultType="java.lang.Integer">
         with ds1 as(
-            SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.ODS_HR_ORG
-            UNION
-            SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG
+        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.ODS_HR_ORG
+        UNION
+        SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG
         )
+        select COUNT(1) from (
         SELECT
-            COUNT(1) as co
+        M.CORPSERIALNO_IMPORT as corpSerialNo,
+        M.CLIENTNO_IMPORT as clientNo,
+        M.REPORTBUYERNO as reportbuyerNo,
+        M.REPORTCORPCOUNTRYCODE as reportCorpCountryCode,
+        M.REPORTCORPCHNNAME as reportCorpChnName,
+        M.REPORTCORPENGNAME as reportCorpEngName,
+        M.REPORTCORPADDRESS as reportCorpaddress,
+        M.CREDITNO as creditno,
+        M.ISTRANSLATION as istranslation,
+        M.CORPSERIALNO_EXPORT as corpSerialNoOut,
+        M.APPROVECODE as approveCode,
+        M.APPROVEMSG as approveMsg,
+        M.CLIENTNO_EXPORT as clientNoOut,
+        M.OTHERMSG as otherMsg,
+        M.UPDATEBY as updateBy,
+        M.UPDATETIME as updateTime,
+        M.APPROVEBY as approveby,
+        M.APPROVEDATE as approveDate,
+        M.updateName as updateName,
+        M.approveName as approveName
         FROM (SELECT ROWNUM AS rowno, N.*
-              FROM (SELECT T.*,
-                           U.*
-                    FROM LOG_ZXB_APPLY T
-                             LEFT JOIN CREDIT_USER U ON T.UPDATEBY = U.USERNAME
-                             LEFT JOIN CREDIT_USER P ON T.APPROVEBY = P.USERNAME
-                    WHERE 1 = 1
-                      AND U.COMPANY_CODE IN (
-                        SELECT CODE --自身
-                        FROM ds1 A
-                        WHERE  CODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
-                        UNION ALL
-                        SELECT CODE --下级公司
-                        FROM ds1 A
-                        WHERE SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
-                        UNION ALL
-                        SELECT B.CODE --下下级公司
-                        FROM ds1 A
-                                 INNER JOIN ds1 B ON A.CODE=B.SCODE
-                        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
-                        UNION ALL
-                        SELECT C.CODE --下下下级公司
-                        FROM ds1 A
-                                 INNER JOIN ds1 B ON A.CODE=B.SCODE
-                                 INNER JOIN ds1 C ON B.CODE=C.SCODE
-                        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
-                        UNION ALL
-                        SELECT D.CODE --下下下下级公司
-                        FROM ds1 A
-                                 INNER JOIN ds1 B ON A.CODE=B.SCODE
-                                 INNER JOIN ds1 C ON B.CODE=C.SCODE
-                                 INNER JOIN ds1 D ON C.CODE=D.SCODE
-                        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
-                    )
-                    ORDER BY updateTime DESC) N
-              WHERE 1 = 1
-                <if test="zxbCode != null and zxbCode!=''">
-                    and (N.reportbuyerNo like '%'||#{zxbCode}||'%' )
-                </if>
-                <if test="zxbCompanyName != null and zxbCompanyName!='' ">
-                    and (N.reportCorpChnName like '%'||#{zxbCompanyName}||'%' OR N.reportCorpEngName like '%'||#{zxbCompanyName}||'%' )
-                </if>
-                <if test="approveCode != null and approveCode != ''">
-                    and (N.approveCode = #{approveCode})
-                </if>
-                <if test="zxbInformant != null and zxbInformant!=''">
-                    and (N.updateBy like '%'||#{zxbInformant}||'%' )
-                </if>
-                <if test="zxbApprover != null and zxbApprover!=''">
-                    and (N.approveby like '%'||#{zxbApprover}||'%' )
-                </if>
-            ) M
+        FROM (SELECT T.*,
+        U.NAME as updateName,
+        P.NAME as approveName
+        FROM LOG_ZXB_APPLY T
+        LEFT JOIN CREDIT_USER U ON T.UPDATEBY = U.USERNAME
+        LEFT JOIN CREDIT_USER P ON T.APPROVEBY = P.USERNAME
         WHERE 1 = 1
+        AND U.COMPANY_CODE IN (
+        SELECT CODE --自身
+        FROM ds1 A
+        WHERE  CODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
+        UNION ALL
+        SELECT CODE --下级公司
+        FROM ds1 A
+        WHERE SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
+        UNION ALL
+        SELECT B.CODE --下下级公司
+        FROM ds1 A
+        INNER JOIN ds1 B ON A.CODE=B.SCODE
+        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
+        UNION ALL
+        SELECT C.CODE --下下下级公司
+        FROM ds1 A
+        INNER JOIN ds1 B ON A.CODE=B.SCODE
+        INNER JOIN ds1 C ON B.CODE=C.SCODE
+        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
+        UNION ALL
+        SELECT D.CODE --下下下下级公司
+        FROM ds1 A
+        INNER JOIN ds1 B ON A.CODE=B.SCODE
+        INNER JOIN ds1 C ON B.CODE=C.SCODE
+        INNER JOIN ds1 D ON C.CODE=D.SCODE
+        WHERE A.SCODE=(SELECT COMPANY_CODE FROM CREDIT_USER WHERE USERNAME=#{operator})
+        )
+        ORDER BY updateTime DESC) N
+        WHERE 1 = 1
+        <if test="zxbCode != null and zxbCode!=''">
+            and (N.reportbuyerNo like '%'||#{zxbCode}||'%' )
+        </if>
+        <if test="zxbCompanyName != null and zxbCompanyName!='' ">
+            and (N.reportCorpChnName like '%'||#{zxbCompanyName}||'%' OR N.reportCorpEngName like '%'||#{zxbCompanyName}||'%' )
+        </if>
+        <if test="approveCode != null and approveCode != ''">
+            and (N.approveCode = #{approveCode})
+        </if>
+        <if test="zxbInformant != null and zxbInformant!=''">
+            and (updateName like '%'||#{zxbInformant}||'%' )
+        </if>
+        <if test="zxbApprover != null and zxbApprover!=''">
+            and (approveName like '%'||#{zxbApprover}||'%' )
+        </if>
+        ) M
+        WHERE 1 = 1
+        )
     </select>
 
     <insert id="insertOAMsg" parameterType="java.util.List">
@@ -283,13 +305,13 @@
     </resultMap>
     <select id="getAllCompanyLevel" resultType="com.fanruan.platform.bean.CompanyLevel">
         SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.ODS_HR_ORG
-        where 1 = 1
+        where ENABLESTATE='2'
         <if test="companyCode != null and companyCode !=''">
             and (SCODE = #{companyCode})
         </if>
         UNION
         SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG
-        WHERE 1 = 1
+        WHERE ENABLESTATE='1'
         <if test="companyCode != null and companyCode !=''">
            and (SCODE = #{companyCode})
         </if>
@@ -302,17 +324,34 @@
     </resultMap>
     <select id="getCompanyLevel" resultType="com.fanruan.platform.bean.CompanyLevel">
         SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.ODS_HR_ORG
-        where 1 = 1
+        where ENABLESTATE='2'
         <if test="companyCode != null and companyCode !=''">
             and (CODE = #{companyCode})
         </if>
         UNION
         SELECT CODE,NAME,SCODE,SNAME FROM BIUSER.INPUT_HR_ORG
-        WHERE 1 = 1
+        WHERE ENABLESTATE='1'
         <if test="companyCode != null and companyCode !=''">
             and (CODE = #{companyCode})
         </if>
     </select>
 
+
+    <resultMap id="getCompanyStatusResultMap" type="java.lang.String">
+        <result column="flag" jdbcType="VARCHAR" property="flag" />
+    </resultMap>
+    <select id="getCompanyStatus" resultType="java.lang.String">
+        SELECT CASE WHEN ENABLESTATE='2' THEN '1' ELSE '0' END AS FLAG FROM BIUSER.ODS_HR_ORG
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode !=''">
+        and (CODE = #{companyCode})
+        </if>
+        UNION
+        SELECT CASE WHEN ENABLESTATE='1' THEN '1' ELSE '0' END AS FLAG FROM BIUSER.INPUT_HR_ORG
+        WHERE 1 = 1
+        <if test="companyCode != null and companyCode !=''">
+            and (CODE = #{companyCode})
+        </if>
+    </select>
 </mapper>
 

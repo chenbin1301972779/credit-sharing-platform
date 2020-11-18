@@ -52,6 +52,9 @@ public class User {
     @Column(name="NEWCOMPANY_FLAG")
     private Integer newCompanyFlag;
 
+    @Column(name="ROLE_NAME")
+    private String roleName;
+
     @Transient
     private String permissionRoles;
 

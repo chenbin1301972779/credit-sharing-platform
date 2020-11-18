@@ -31,5 +31,6 @@ public interface CommonsMapper {
     List<CompanyLevel> getAllCompanyLevel(@Param(value="companyCode") String companyCode);
     /**获取公司信息*/
     CompanyLevel getCompanyLevel(@Param(value="companyCode") String companyCode);
-
+    /**判断公司是否启用   1：代表启用 */
+    String getCompanyStatus(@Param(value="companyCode") String companyCode);
 }

@@ -72,4 +72,16 @@ public class Report {
     @Column(name="report_html", columnDefinition="blob", nullable=true)
     @JsonIgnore
     private byte[] reportHtml;
+
+    /**
+     * 保存接口参数 AREA、INDUSTRY、COMPANY_TYPE
+     */
+    @Column(name="AREA")
+    private String area;
+
+    @Column(name="INDUSTRY")
+    private String industry;
+
+    @Column(name="COMPANY_TYPE")
+    private String companyType;
 }
